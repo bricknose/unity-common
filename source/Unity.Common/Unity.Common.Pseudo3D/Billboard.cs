@@ -1,33 +1,50 @@
-﻿using System;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 
 namespace Unity.Common.Pseudo3D
 {
     [RequireComponent(typeof(Animator))]
+    [RequireComponent(typeof(SpriteRenderer))]
     public class Billboard : MonoBehaviour
     {
-        public int directions = 8;
-        public bool MirrorLeft = true;
-        public Camera MainCamera;
-        Animator m_Anim;
-        SpriteRenderer m_SpriteRenderer;
-        float minMirrorAngle = 0;
-        float maxMirrorAngle = 0;
+        private Animator _animator;
+        private float _maxMirrorAngle;
+        private float _minMirrorAngle;
+        private SpriteRenderer _spriteRenderer;
 
-        void Start()
+        public int Directions = 8;
+        public Camera MainCamera;
+        public bool MirrorLeft = true;
+
+        public void Start()
         {
-            m_Anim = this.GetComponent<Animator>();
-            m_SpriteRenderer = this.GetComponent<SpriteRenderer>();
-            if (directions <= 0)
-            {
-                directions = 1;
-            }
-            minMirrorAngle = (360 / directions) / 2;
-            maxMirrorAngle = 180 - minMirrorAngle;
+            GetDependencies();
+            InitializeBillboard();
         }
 
-        private void Awake()
+        private void GetDependencies()
+        {
+            _animator = GetComponent<Animator>();
+            _spriteRenderer = GetComponent<SpriteRenderer>();
+        }
+
+        private void InitializeBillboard()
+        {
+            if (Directions <= 0)
+            {
+                Directions = 1;
+            }
+
+            _minMirrorAngle = 360f / 2 / Directions;
+            _maxMirrorAngle = 180f - _minMirrorAngle;
+        }
+
+        public void Awake()
+        {
+            UpdateMainCamera();
+        }
+
+        private void UpdateMainCamera()
         {
             if (MainCamera == null)
             {
@@ -35,43 +52,80 @@ namespace Unity.Common.Pseudo3D
             }
         }
 
-        void Update()
+        public void Update()
         {
-            Vector3 viewDirection = -new Vector3(MainCamera.transform.forward.x, 0, MainCamera.transform.forward.z);
-            transform.LookAt(transform.position + viewDirection);
-            m_Anim.SetFloat("ViewAngle", transform.localEulerAngles.y);
+            var viewDirection = GetBillboardTargetDirection(MainCamera.transform);
+            FaceBillboardTowardTarget(viewDirection);
+
+            var billboardAngle = GetBillboardViewAngle();
+            UpdateAnimatorViewAngle(billboardAngle);
+
             if (MirrorLeft)
             {
-                m_SpriteRenderer.flipX = !(transform.localEulerAngles.y >= minMirrorAngle && transform.localEulerAngles.y <= maxMirrorAngle);
+                UpdateSpriteMirroring(billboardAngle);
             }
         }
 
-        /// <summary>
-        /// Rotate billboards to face editor camera while game not running.
-        /// </summary>
+        private void UpdateSpriteMirroring(float billboardAngle)
+        {
+            _spriteRenderer.flipX = !(billboardAngle >= _minMirrorAngle &&
+                                      billboardAngle <= _maxMirrorAngle);
+        }
+
+        private void UpdateAnimatorViewAngle(float billboardAngle)
+        {
+            _animator.SetFloat("ViewAngle", billboardAngle);
+        }
+
+        private float GetBillboardViewAngle()
+        {
+            return transform.localEulerAngles.y;
+        }
+
+        private void FaceBillboardTowardTarget(Vector3 viewDirection)
+        {
+            transform.LookAt(transform.position + viewDirection);
+        }
+
+        private static Vector3 GetBillboardTargetDirection(Transform cameraTransform)
+        {
+            return -new Vector3(cameraTransform.forward.x, 0, cameraTransform.forward.z);
+        }
+
         public void OnDrawGizmos()
         {
             if (!Application.isPlaying)
             {
-                SceneView sceneView = GetActiveSceneView();
-                if (sceneView)
-                {
-                    // Editor camera stands in for player camera in edit mode
-                    Vector3 viewDirection = -new Vector3(sceneView.camera.transform.forward.x, 0, sceneView.camera.transform.forward.z);
-                    transform.LookAt(transform.position + viewDirection);
-                }
+                // Editor camera stands in for player camera in edit mode
+                FaceBillboardTowardSceneCamera();
             }
 
-            Gizmos.color = Color.red;
-            Gizmos.DrawRay(transform.parent.position, transform.parent.forward * 2);
-
+            DrawBillboardDirectionRay();
         }
 
-        private SceneView GetActiveSceneView()
+        private void DrawBillboardDirectionRay()
+        {
+            Gizmos.color = Color.red;
+            Gizmos.DrawRay(transform.parent.position, transform.parent.forward * 2);
+        }
+
+        private void FaceBillboardTowardSceneCamera()
+        {
+            var sceneView = GetActiveSceneView();
+            if (sceneView)
+            {
+                var viewDirection = GetBillboardTargetDirection(sceneView.camera.transform);
+                FaceBillboardTowardTarget(viewDirection);
+            }
+        }
+
+        private static SceneView GetActiveSceneView()
         {
             // Return the focused window if it is a SceneView
             if (EditorWindow.focusedWindow != null && EditorWindow.focusedWindow.GetType() == typeof(SceneView))
+            {
                 return (SceneView)EditorWindow.focusedWindow;
+            }
 
             return null;
         }
