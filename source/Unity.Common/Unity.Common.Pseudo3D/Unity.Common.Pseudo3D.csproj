@@ -8,7 +8,9 @@
     <UnityModulesPath>$(UnityManagedPath)\UnityEngine</UnityModulesPath>
     <UnityExtensionsPath>Editor\Data\UnityExtensions\Unity</UnityExtensionsPath>
     <UnityEnginePath>$(UnityManagedPath)\UnityEngine.dll</UnityEnginePath>
+    <UnityEditorPath>$(UnityManagedPath)\UnityEditor.dll</UnityEditorPath>
     <UnityEngineUIPath>$(UnityExtensionsPath)\GUISystem\UnityEngine.UI.dll</UnityEngineUIPath>
+    <UnityEngineTestRunnerPath>$(UnityExtensionsPath)\TestRunner\UnityEngine.TestRunner.dll</UnityEngineTestRunnerPath>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Unity3D" Version="1.2.0" />
