@@ -13,13 +13,44 @@ namespace Unity.Common.Pseudo3D
         private SpriteRenderer _spriteRenderer;
 
         public int Directions = 8;
-        public Camera MainCamera;
         public bool MirrorLeft = true;
+        public Camera MainCamera;
+        public string AnimatorAngleVariable = "ViewAngle";
 
         public void Start()
         {
             GetDependencies();
             InitializeBillboard();
+        }
+
+        public void Awake()
+        {
+            UpdateMainCamera();
+        }
+
+        public void Update()
+        {
+            var viewDirection = GetBillboardTargetDirection(MainCamera.transform);
+            FaceBillboardTowardTarget(viewDirection);
+
+            var billboardAngle = GetBillboardViewAngle();
+            UpdateAnimatorViewAngle(billboardAngle);
+
+            if (MirrorLeft)
+            {
+                UpdateSpriteMirroring(billboardAngle);
+            }
+        }
+
+        public void OnDrawGizmos()
+        {
+            if (!Application.isPlaying)
+            {
+                // Editor camera stands in for player camera in edit mode
+                FaceBillboardTowardSceneCamera();
+            }
+
+            DrawBillboardDirectionRay();
         }
 
         private void GetDependencies()
@@ -39,30 +70,11 @@ namespace Unity.Common.Pseudo3D
             _maxMirrorAngle = 180f - _minMirrorAngle;
         }
 
-        public void Awake()
-        {
-            UpdateMainCamera();
-        }
-
         private void UpdateMainCamera()
         {
             if (MainCamera == null)
             {
                 MainCamera = Camera.main;
-            }
-        }
-
-        public void Update()
-        {
-            var viewDirection = GetBillboardTargetDirection(MainCamera.transform);
-            FaceBillboardTowardTarget(viewDirection);
-
-            var billboardAngle = GetBillboardViewAngle();
-            UpdateAnimatorViewAngle(billboardAngle);
-
-            if (MirrorLeft)
-            {
-                UpdateSpriteMirroring(billboardAngle);
             }
         }
 
@@ -74,7 +86,7 @@ namespace Unity.Common.Pseudo3D
 
         private void UpdateAnimatorViewAngle(float billboardAngle)
         {
-            _animator.SetFloat("ViewAngle", billboardAngle);
+            _animator.SetFloat(AnimatorAngleVariable, billboardAngle);
         }
 
         private float GetBillboardViewAngle()
@@ -82,25 +94,14 @@ namespace Unity.Common.Pseudo3D
             return transform.localEulerAngles.y;
         }
 
-        private void FaceBillboardTowardTarget(Vector3 viewDirection)
-        {
-            transform.LookAt(transform.position + viewDirection);
-        }
-
         private static Vector3 GetBillboardTargetDirection(Transform cameraTransform)
         {
             return -new Vector3(cameraTransform.forward.x, 0, cameraTransform.forward.z);
         }
 
-        public void OnDrawGizmos()
+        private void FaceBillboardTowardTarget(Vector3 viewDirection)
         {
-            if (!Application.isPlaying)
-            {
-                // Editor camera stands in for player camera in edit mode
-                FaceBillboardTowardSceneCamera();
-            }
-
-            DrawBillboardDirectionRay();
+            transform.LookAt(transform.position + viewDirection);
         }
 
         private void DrawBillboardDirectionRay()
