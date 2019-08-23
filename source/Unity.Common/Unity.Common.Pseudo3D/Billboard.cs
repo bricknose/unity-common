@@ -121,13 +121,7 @@ namespace Unity.Common.Pseudo3D
 
         private static SceneView GetActiveSceneView()
         {
-            // Return the focused window if it is a SceneView
-            if (EditorWindow.focusedWindow != null && EditorWindow.focusedWindow.GetType() == typeof(SceneView))
-            {
-                return (SceneView)EditorWindow.focusedWindow;
-            }
-
-            return null;
+            return EditorWindow.focusedWindow as SceneView;
         }
     }
 }
