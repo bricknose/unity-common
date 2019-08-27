@@ -30,4 +30,4 @@ A source of common libraries developed for use in Unity projects.
 ## Thanks
 
 - Thanks to [Derploid Entertainment](https://github.com/DerploidEntertainment) for making the fantastic [Unity3D Assembly NuGet Package](https://github.com/DerploidEntertainment/UnityAssemblies).
-- Thanks to [richardschembri](https://github.com/richardschembri) for the [Doom-Style Animated Billboard](https://github.com/richardschembri/DoomStyleAnimatedBillboard/blob/master/Doom%20Style%20Animated%20Billboard/Assets/Scripts/AnimatedBillboardSprite.cs) code.
+- Thanks to [richardschembri](https://github.com/richardschembri) for the [Doom-Style Animated Billboard](https://www.reddit.com/r/Unity3D/comments/8xjvp3/doom_style_animated_billboard/) code.
